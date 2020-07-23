@@ -1,0 +1,5 @@
+Game:
+    Script:
+        priority: 0
+        source: "Data/GameObjects/Game/Game.lua"
+    permanent: true

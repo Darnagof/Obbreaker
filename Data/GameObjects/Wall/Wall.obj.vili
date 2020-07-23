@@ -1,0 +1,20 @@
+Wall:
+    Script:
+        priority: 0
+        source: "Data/GameObjects/Wall/Wall.lua"
+    Sprite:
+        path:"Data/Sprites/pixel.png"
+        rect:
+            x:0.0
+            y:0.0
+            width:0.0
+            height:0.0
+            unit:"SceneUnits"
+    Collider:
+        unit:"SceneUnits"
+        points:[
+            {x:0.0, y:0.0},
+            {x:0.0, y:0.0},
+            {x:0.0, y:0.0},
+            {x:0.0, y:0.0}
+        ]

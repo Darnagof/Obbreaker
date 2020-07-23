@@ -1,0 +1,20 @@
+Paddle:
+    Script:
+        priority: 0
+        source: "Data/GameObjects/Paddle/Paddle.lua"
+    Sprite:
+        path:"Data/Sprites/GameObjects/Paddle/Paddle.png"
+        rect:
+            x:0.0
+            y:0.0
+            width:0.775
+            height:0.175
+            unit:"SceneUnits"
+    Collider:
+        unit:"SceneUnits"
+        points:[
+            {x:0.0, y:0.0},
+            {x:0.775, y:0.0},
+            {x:0.775, y:0.175},
+            {x:0.0, y:0.175}
+        ]

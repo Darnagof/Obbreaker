@@ -1,0 +1,41 @@
+Meta:
+    name:"Menu"
+
+View:
+    size:4.5
+    position:
+        x:0.0
+        y:0.0
+        unit:"SceneUnits"
+    referential:"TopLeft"
+
+GameObjects:
+    game:
+        type:"Game"
+    wallLeft:
+        type:"Wall"
+        Requires:
+            pos:
+                x:1.8
+                y:0.0
+            size:
+                x:0.2
+                y:9
+    wallRight:
+        type:"Wall"
+        Requires:
+            pos:
+                x:14
+                y:0.0
+            size:
+                x:0.2
+                y:9
+    wallTop:
+        type:"Wall"
+        Requires:
+            pos:
+                x:2.0
+                y:0.0
+            size:
+                x:12
+                y:0.2

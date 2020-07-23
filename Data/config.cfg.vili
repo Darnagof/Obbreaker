@@ -1,0 +1,22 @@
+Input:
+    game:
+        HUp:"Hold:Up"
+        HLeft:"Hold:Left"
+        HRight:"Hold:Right"
+        HDown:"Hold:Down"
+        PUp:"Pressed:Up"
+        PLeft:"Pressed:Left"
+        PRight:"Pressed:Right"
+        PDown:"Pressed:Down"
+        Reset:"Pressed:R"
+        Return:"Pressed:Return"
+        Space:"Pressed:Space"
+        LeftClick:"Pressed:LMB"
+
+Debug:
+    logLevel: info
+
+Framerate:
+    framerateLimit: true
+    framerateTarget: 60
+    vsync: true

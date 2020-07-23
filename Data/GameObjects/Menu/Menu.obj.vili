@@ -1,0 +1,4 @@
+Menu:
+    Script:
+        priority: 0
+        source: "Data/GameObjects/Menu/Menu.lua"

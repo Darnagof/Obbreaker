@@ -1,0 +1,5 @@
+Board:
+    Script:
+        priority: 0
+        source: "Data/GameObjects/Board/Board.lua"
+    permanent: true

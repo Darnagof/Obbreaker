@@ -1,0 +1,20 @@
+Ball:
+    Script:
+        priority: 0
+        source: "Data/GameObjects/Ball/Ball.lua"
+    Sprite:
+        path:"Data/Sprites/GameObjects/Ball/Ball.png"
+        rect:
+            x:0.0
+            y:0.0
+            width:0.175
+            height:0.175
+            unit:"SceneUnits"
+    Collider:
+        unit:"SceneUnits"
+        points:[
+            {x:0.0, y:0.0},
+            {x:0.175, y:0.0},
+            {x:0.175, y:0.175},
+            {x:0.0, y:0.175}
+        ]

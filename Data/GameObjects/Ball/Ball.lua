@@ -1,3 +1,5 @@
+local Utils = require "Data/Scripts/Utils"
+
 INITIAL_SPEED = 5 -- SceneUnits/seconds
 
 -- Which side of block/wall/paddle had been touched
@@ -47,25 +49,33 @@ end
 
 function Object.onCollide(self, baseOffset, collData)
     -- To record which side had been touched (avoid changing angle two times if two objects had been touched in same side)
-    local touchedSides = {}
-    if #collData.colliders > 1 then log.info("Ball", "onCollide", "touched > 1 colliders !") end--DEBUG
+    local touchedSides = {0, 0, 0, 0}
+    if #collData.colliders > 1 then log.info("Ball", "onCollide", "touched "..#collData.colliders.." colliders !") end--DEBUG
     for _, coll in pairs(collData.colliders) do
         local other = Engine.Scene:getGameObject(coll:getParentId())
         local otherType = other:getType()
-        local side = Object:_relativePosFromObj(other)
+        local sides = Object:_relativePosFromObj(other)
         -- If paddle, bounce (angle and speed depending of ball position and paddle movement)
         if otherType == "Paddle" then
-            Object:_paddleBounce(side, other)
+            Object:_paddleBounce(sides, other)
         -- If block or wall
         else
-            if touchedSides[side] == nil then
-                Object:_bounce(side)
-                touchedSides[side] = true
+            for _, side in ipairs(sides) do
+                touchedSides[side] = touchedSides[side] + 1
             end
             if otherType == "Block" then
                 other:destroy()
                 -- TODO raise score
             end
+        end
+    end
+    local maxSideAmount = 0
+    for _, sideAmount in ipairs(touchedSides) do
+        if maxSideAmount < sideAmount then maxSideAmount = sideAmount end
+    end
+    if maxSideAmount > 0 then
+        for side, amount in ipairs(touchedSides) do
+            if amount == maxSideAmount then Object:_bounce(side) end
         end
     end
 end
@@ -76,17 +86,15 @@ function Object:_relativePosFromObj(target)
     local ballBotRight = Object:getPos("BottomRight")
     local targetTopLeft = target:getPos()
     local targetBotRight = target:getPos("BottomRight")
-    log.info("Ball", "_relativePosFromObj", "ballBotRight:", ballBotRight, "targetTopLeft:", targetTopLeft)--DEBUG
-    log.info("Ball", "_relativePosFromObj", "target id:", target:getId())
-    if ballBotRight.x <= targetTopLeft.x then
-        return HitPos.Left
-    elseif ballTopLeft.x >= targetBotRight.x then
-        return HitPos.Right
-    elseif ballBotRight.y <= targetTopLeft.y then
-        return HitPos.Top
-    else
-        return HitPos.Bottom
-    end
+    local hitPoses = {}
+    log.info("Ball", "_relativePosFromObj", "target id:", target.id)
+    log.info("Ball", "_relativePosFromObj", "\n\tballTopLeft:", ballTopLeft, "\n\tballBotRight:", ballBotRight, "\n\ttargetTopLeft:", targetTopLeft, "\n\ttargetBotRight:", targetBotRight)--DEBUG
+    if ballBotRight.x <= targetTopLeft.x then table.insert(hitPoses, HitPos.Left) end
+    if ballTopLeft.x >= targetBotRight.x then table.insert(hitPoses, HitPos.Right) end
+    if ballBotRight.y <= targetTopLeft.y then table.insert(hitPoses, HitPos.Top) end
+    if ballTopLeft.y >= targetBotRight.y then table.insert(hitPoses, HitPos.Bottom) end
+
+    return hitPoses
 end
 
 
@@ -95,49 +103,48 @@ end
 -- BUG Two bricks touched on bottom -> the new ball angle is sometimes wrong (mirrored horizontally instead of vertically)
 function Object:_bounce(hitSide)
     local angle = _trajectory:getAngle()
-    local newAngle = 0
-    if hitSide == HitPos.Left then
-        newAngle = 180 - angle
-    elseif hitSide == HitPos.Right then
-        newAngle = 180 - angle
-    elseif hitSide == HitPos.Top then
-        newAngle = 360 - angle
+    if hitSide == HitPos.Left or hitSide == HitPos.Right then
+        newAngle = Utils.mirrorAngle(angle, Utils.Axis.Vertically)
     else
-        newAngle = 360 - angle
+        newAngle = Utils.mirrorAngle(angle, Utils.Axis.Horizontally)
     end
-    log.info("Ball", "_bounce", "hitSide:", hitSide, "newAngle:", newAngle)--DEBUG
-    _trajectory:setAngle(newAngle)
+    log.info("Ball", "_bounce", "hitSide:", hitSide, "newAngle:", Utils.angleTo360(newAngle))--DEBUG
+    _trajectory:setAngle(Utils.angleTo360(newAngle))
 end
 
 -- Called when ball collide with the paddle
 -- TODO speed modified by motion (and position ?) of paddle
 -- TODO what to do with sides and bottom collision ?
 -- BUG Sometimes the ball new angle is wrong when the ball touched in the middle (hitposes = left and bottom)
-function Object:_paddleBounce(hitSide, paddle)
+-- BUG Removed teleport only if hitSide != Top, because if you move paddle toward the ball, the ball can be inside the paddle during collision detection
+-- and so no hitsides are found
+function Object:_paddleBounce(hitSides, paddle)
+    --[[ for _, side in ipairs(hitSides) do
+        if side ~= HitPos.Top then
+            -- Teleport ball on top of paddle (with a little offset to avoid ball being stuck)
+            log.info("Ball", "_paddleBounce", "ball to top of paddle")
+            Object:setPos(Object:getPos("Bottom").x, paddle:getPos().y - 0.0001, "SceneUnits", "Bottom")
+            break
+        end
+    end ]]
+    log.info("Ball", "_paddleBounce", "tp ball to (", Object:getPos("Bottom").x, ",", paddle:getPos().y - 0.0001, ")")
+    Object:setPos(Object:getPos("Bottom").x, paddle:getPos().y - 0.0001, "SceneUnits", "Bottom")
+
     local ballMiddle = Object:getPos("Center").x
     local paddleMiddle = paddle:getPos("Center").x
     local angle = _trajectory:getAngle()
-    local newAngle = 0
 
-    if hitSide == HitPos.Left then
-        newAngle = 180 - angle
-    elseif hitSide == HitPos.Right then
-        newAngle = 180 - angle
-    elseif hitSide == HitPos.Top then
-        -- TODO Find good angle modifier amount
-        local addAngle = -30 * ((ballMiddle-paddleMiddle)/(paddle:getWidth()/2))
-        newAngle = 360 - angle + addAngle
-        if newAngle > 165 then
-            newAngle = 165
-        elseif newAngle < 15 then
-            newAngle = 15
-        end
-        log.info("Ball", "_paddleBounce", "angle", angle, "addAngle:", addAngle, "newAngle:", newAngle)--DEBUG
-    -- if Bottom
-    else
-        log.error("Ball", "_paddleBounce", "HitPos = Bottom")--DEBUG
-        newAngle = 360 - angle
+    -- BUG Wrong new angle mirroring; example : with -15 angle, the new is 165 (it should be 15)
+    local addAngle = -30 * ((ballMiddle-paddleMiddle)/(paddle:getWidth()/2))
+    newAngle = Utils.angleTo360(Utils.mirrorAngle(angle, Utils.Axis.Horizontally)) + addAngle
+    log.info("Ball", "_paddleBounce", "newAngle:", newAngle)
+    if newAngle > 165 then
+        newAngle = 165
+    elseif newAngle < 15 then
+        newAngle = 15
     end
+
+    log.info("Ball", "_paddleBounce", "angle", angle, "addAngle:", addAngle, "newAngle:", newAngle)--DEBUG
     _trajectory:setAngle(newAngle)
 end
 

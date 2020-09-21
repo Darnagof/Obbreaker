@@ -22,6 +22,10 @@ function Local.Init()
     end
 end
 
+function Object:loadLevel(file)
+    -- TODO Load level from vili file
+end
+
 function Object:ballToPaddle()
     _paddle:getSceneNode():addChild(_ball:getSceneNode())
     local paddlePos = _paddle:getPos("Top")

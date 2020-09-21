@@ -44,7 +44,7 @@ end
 
 function Object:getPos(ref)
     if ref then
-        return This.Sprite:getPosition(obe.Transform.Referential.FromString(ref or "Center"))
+        return This.Sprite:getPosition(obe.Transform.Referential.FromString(ref or "TopLeft"))
     end
     return This.SceneNode:getPosition()
 end
